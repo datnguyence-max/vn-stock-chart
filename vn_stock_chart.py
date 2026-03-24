@@ -13,19 +13,27 @@
 =============================================================
 """
 
-# ── Kiểm tra thư viện ────────────────────────────────────────
+# ── Tự động cài thư viện nếu thiếu ──────────────────────────
 import sys
-MISSING = []
-for pkg in ["vnstock", "plotly", "dash", "pandas"]:
+import subprocess
+
+PACKAGES = {
+    "vnstock": "vnstock==3.2.1",
+    "plotly":  "plotly",
+    "dash":    "dash",
+    "pandas":  "pandas",
+}
+
+for pkg, install_name in PACKAGES.items():
     try:
         __import__(pkg)
     except ImportError:
-        MISSING.append(pkg)
+        print(f"  Dang cai {pkg}...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", install_name],
+                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        print(f"  Da cai xong {pkg}.")
 
-if MISSING:
-    print("\n  Thieu thu vien. Chay lenh sau roi thu lai:")
-    print(f"    pip install {' '.join(MISSING)}\n")
-    sys.exit(1)
+print("  Tat ca thu vien san sang.")
 
 # ── Import ───────────────────────────────────────────────────
 import pandas as pd
