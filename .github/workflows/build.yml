@@ -22,18 +22,29 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install vnstock==3.2.1 plotly dash pandas pyinstaller
+          pip install vnstock==3.2.1 plotly dash pandas pytz pyinstaller
 
       - name: Build EXE
         run: |
           pyinstaller `
             --onefile `
             --name "VNStockChart" `
+            --hidden-import "pytz" `
+            --hidden-import "pytz.tzinfo" `
+            --hidden-import "pytz.exceptions" `
+            --hidden-import "pytz.tzfile" `
             --hidden-import "vnstock" `
             --hidden-import "vnstock.explorer" `
             --hidden-import "vnstock.explorer.kbs" `
+            --hidden-import "vnstock.explorer.kbs.quote" `
             --hidden-import "vnstock.explorer.tcbs" `
+            --hidden-import "vnstock.explorer.tcbs.quote" `
             --hidden-import "vnstock.explorer.vci" `
+            --hidden-import "vnstock.core" `
+            --hidden-import "vnstock.core.utils" `
+            --hidden-import "vnstock.core.utils.parser" `
+            --hidden-import "vnstock.base" `
+            --hidden-import "vnai" `
             --hidden-import "dash" `
             --hidden-import "dash_core_components" `
             --hidden-import "dash_html_components" `
@@ -44,19 +55,26 @@ jobs:
             --hidden-import "pandas" `
             --hidden-import "flask" `
             --hidden-import "flask_compress" `
+            --hidden-import "requests" `
+            --hidden-import "tenacity" `
+            --hidden-import "dateutil" `
+            --hidden-import "dateutil.parser" `
             --collect-all "vnstock" `
+            --collect-all "vnai" `
             --collect-all "dash" `
             --collect-all "dash_core_components" `
             --collect-all "dash_html_components" `
+            --collect-all "pytz" `
             vn_stock_chart.py
         shell: pwsh
 
-      - name: Verify EXE exists
+      - name: Verify EXE
         run: |
           if (Test-Path "dist\VNStockChart.exe") {
-            Write-Host "BUILD OK - size: $((Get-Item 'dist\VNStockChart.exe').Length / 1MB) MB"
+            $size = [math]::Round((Get-Item 'dist\VNStockChart.exe').Length / 1MB, 1)
+            Write-Host "BUILD OK - $size MB"
           } else {
-            Write-Host "BUILD FAILED - EXE not found"
+            Write-Host "BUILD FAILED"
             exit 1
           }
         shell: pwsh
@@ -79,11 +97,11 @@ jobs:
 
             ### Cách dùng
             1. Download `VNStockChart.exe`
-            2. Double-click để chạy (lần đầu mở hơi chậm ~10-20 giây)
+            2. Double-click để chạy (lần đầu mở hơi chậm ~15 giây)
             3. Mở trình duyệt tại `http://127.0.0.1:8050`
 
             ### Tính năng
-            - Biểu đồ nến Nhật / đường giá cổ phiếu VN (HOSE, HNX, UPCOM)
+            - Biểu đồ nến Nhật / đường giá cổ phiếu VN
             - Nguồn dữ liệu: vnstock (KBS / TCBS)
             - MA20, MA50, MA200 | Volume | So sánh % nhiều mã
         env:
