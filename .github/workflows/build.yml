@@ -22,7 +22,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install vnstock==3.2.1 plotly dash pandas pytz pyinstaller
+          pip install vnstock==3.2.1 plotly dash pandas pytz tenacity pyinstaller
 
       - name: Build EXE
         run: |
@@ -30,9 +30,13 @@ jobs:
             --onefile `
             --name "VNStockChart" `
             --hidden-import "pytz" `
-            --hidden-import "pytz.tzinfo" `
-            --hidden-import "pytz.exceptions" `
-            --hidden-import "pytz.tzfile" `
+            --hidden-import "tenacity" `
+            --hidden-import "tenacity.nap" `
+            --hidden-import "tenacity.stop" `
+            --hidden-import "tenacity.wait" `
+            --hidden-import "tenacity.retry" `
+            --hidden-import "tenacity.before" `
+            --hidden-import "tenacity.after" `
             --hidden-import "vnstock" `
             --hidden-import "vnstock.explorer" `
             --hidden-import "vnstock.explorer.kbs" `
@@ -56,7 +60,6 @@ jobs:
             --hidden-import "flask" `
             --hidden-import "flask_compress" `
             --hidden-import "requests" `
-            --hidden-import "tenacity" `
             --hidden-import "dateutil" `
             --hidden-import "dateutil.parser" `
             --collect-all "vnstock" `
@@ -65,6 +68,7 @@ jobs:
             --collect-all "dash_core_components" `
             --collect-all "dash_html_components" `
             --collect-all "pytz" `
+            --collect-all "tenacity" `
             vn_stock_chart.py
         shell: pwsh
 
@@ -97,12 +101,7 @@ jobs:
 
             ### Cách dùng
             1. Download `VNStockChart.exe`
-            2. Double-click để chạy (lần đầu mở hơi chậm ~15 giây)
+            2. Double-click để chạy (lần đầu ~15 giây)
             3. Mở trình duyệt tại `http://127.0.0.1:8050`
-
-            ### Tính năng
-            - Biểu đồ nến Nhật / đường giá cổ phiếu VN
-            - Nguồn dữ liệu: vnstock (KBS / TCBS)
-            - MA20, MA50, MA200 | Volume | So sánh % nhiều mã
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
