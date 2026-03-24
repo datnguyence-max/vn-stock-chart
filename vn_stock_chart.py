@@ -13,27 +13,8 @@
 =============================================================
 """
 
-# ── Tự động cài thư viện nếu thiếu ──────────────────────────
 import sys
-import subprocess
-
-PACKAGES = {
-    "vnstock": "vnstock==3.2.1",
-    "plotly":  "plotly",
-    "dash":    "dash",
-    "pandas":  "pandas",
-}
-
-for pkg, install_name in PACKAGES.items():
-    try:
-        __import__(pkg)
-    except ImportError:
-        print(f"  Dang cai {pkg}...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", install_name],
-                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        print(f"  Da cai xong {pkg}.")
-
-print("  Tat ca thu vien san sang.")
+print("  VN Stock Chart dang khoi dong...")
 
 # ── Import ───────────────────────────────────────────────────
 import pandas as pd
