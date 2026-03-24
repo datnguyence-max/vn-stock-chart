@@ -2,9 +2,8 @@ name: Build Windows EXE
 
 on:
   push:
-    branches: [ main ]
-  release:
-    types: [ created ]
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 jobs:
@@ -13,26 +12,28 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Setup Python 3.11
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install vnstock plotly dash pandas pyinstaller
+          pip install vnstock==3.2.1 plotly dash pandas pyinstaller
 
-      - name: Build EXE with PyInstaller
+      - name: Build EXE
         run: |
           pyinstaller `
             --onefile `
-            --windowed `
             --name "VNStockChart" `
-            --icon "icon.ico" `
-            --add-data "assets;assets" `
+            --hidden-import "vnstock" `
+            --hidden-import "vnstock.explorer" `
+            --hidden-import "vnstock.explorer.kbs" `
+            --hidden-import "vnstock.explorer.tcbs" `
+            --hidden-import "vnstock.explorer.vci" `
             --hidden-import "dash" `
             --hidden-import "dash_core_components" `
             --hidden-import "dash_html_components" `
@@ -40,22 +41,51 @@ jobs:
             --hidden-import "plotly" `
             --hidden-import "plotly.graph_objects" `
             --hidden-import "plotly.subplots" `
-            --hidden-import "vnstock" `
             --hidden-import "pandas" `
-            app.py
+            --hidden-import "flask" `
+            --hidden-import "flask_compress" `
+            --collect-all "vnstock" `
+            --collect-all "dash" `
+            --collect-all "dash_core_components" `
+            --collect-all "dash_html_components" `
+            vn_stock_chart.py
         shell: pwsh
 
-      - name: Upload EXE artifact
-        uses: actions/upload-artifact@v4
+      - name: Verify EXE exists
+        run: |
+          if (Test-Path "dist\VNStockChart.exe") {
+            Write-Host "BUILD OK - EXE size: $((Get-Item 'dist\VNStockChart.exe').Length / 1MB) MB"
+          } else {
+            Write-Host "BUILD FAILED - EXE not found"
+            exit 1
+          }
+        shell: pwsh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
         with:
           name: VNStockChart-Windows
-          path: dist/VNStockChart.exe
+          path: dist\VNStockChart.exe
           retention-days: 30
 
-      - name: Upload to Release (nếu là release)
-        if: github.event_name == 'release'
-        uses: softprops/action-gh-release@v2
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
         with:
-          files: dist/VNStockChart.exe
+          files: dist\VNStockChart.exe
+          name: "VN Stock Chart ${{ github.ref_name }}"
+          body: |
+            ## VN Stock Chart ${{ github.ref_name }}
+
+            ### Cách dùng
+            1. Download `VNStockChart.exe`
+            2. Double-click để chạy (lần đầu mở hơi chậm ~10-20 giây)
+            3. Mở trình duyệt tại `http://127.0.0.1:8050`
+
+            ### Tính năng
+            - Biểu đồ nến Nhật / đường giá cổ phiếu VN (HOSE, HNX, UPCOM)
+            - Nguồn dữ liệu: vnstock (KBS / TCBS)
+            - DCM, DPM, VRE, FPT, VNM và toàn bộ mã niêm yết
+            - MA20, MA50, MA200 | Volume | So sánh % nhiều mã
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
